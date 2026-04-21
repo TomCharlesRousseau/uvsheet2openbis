@@ -1,118 +1,184 @@
 """
 openBIS connection handler.
-Manages authentication using keyring for secure PAT/token storage.
+Supports PAT (Personal Access Token) with keyring caching and password fallback.
 """
 
-import keyring
-from pybis import Openbis
-from getpass import getpass, getuser
+from getpass import getpass
 from utils.logging_config import get_logger
 from config import Config
 
 logger = get_logger()
 
-# Cache password during session
-_cached_password = None
+# Optional keyring import for secure credential storage
+try:
+    import keyring
+
+    KEYRING_AVAILABLE = True
+except ImportError:
+    KEYRING_AVAILABLE = False
+    logger.warning("keyring not available. Install with: pip install keyring")
 
 
-def pat_exists(userid):
-    """Check if a valid PAT exists in keyring for the given user."""
-    pat = keyring.get_password("openbis", userid)
-    return pat is not None
-
-
-def connect_openbis(url=None, userid=None, space=None, force_password=False):
+def _get_cached_pat(username: str) -> str:
     """
-    Connect to OpenBIS with dual-authentication support.
+    Retrieve cached PAT from system keyring.
 
-    Parameters:
-    -----------
-    - url: OpenBIS server URL (uses config if None)
-    - userid: Username (uses system user if None)
-    - space: Optional space (uses config if None)
-    - force_password: If True, skip PAT check and prompt for password directly
+    Args:
+        username: openBIS username
 
-    Returns: (Openbis object, userid, space, pat_found)
-
-    Behavior:
-    - force_password=False: Try PAT first, fallback to password if PAT missing/expired
-    - force_password=True: Skip PAT entirely, prompt for password directly
+    Returns:
+        Cached PAT or empty string if not found
     """
-    global _cached_password
-    
-    # Load config if not provided
+    if not KEYRING_AVAILABLE:
+        logger.info("⚠ Keyring not available - will use password login")
+        return ""
+
+    try:
+        pat = keyring.get_password("openbis", username)
+        if pat:
+            logger.debug(f"Retrieved cached PAT for {username}")
+            return pat
+        else:
+            logger.info(f"ℹ No cached PAT found in keyring for {username}")
+            return ""
+    except Exception as e:
+        logger.warning(f"⚠ Error retrieving PAT from keyring: {e}")
+        return ""
+
+
+def _cache_pat(username: str, pat: str) -> bool:
+    """
+    Cache PAT in system keyring.
+
+    Args:
+        username: openBIS username
+        pat: Personal Access Token
+
+    Returns:
+        True if cached successfully, False otherwise
+    """
+    if not KEYRING_AVAILABLE:
+        logger.debug("Keyring not available. PAT not cached.")
+        return False
+
+    try:
+        keyring.set_password("openbis", username, pat)
+        logger.debug(f"Cached PAT for {username}")
+        return True
+    except Exception as e:
+        logger.warning(f"Could not cache PAT: {e}")
+        return False
+
+
+def _generate_pat(openbis, username: str, password: str):
+    """
+    Extract the PAT token from openbis object after successful login.
+
+    Args:
+        openbis: Connected pybis.Openbis instance (already logged in)
+        username: openBIS username
+        password: openBIS password (not used, just for signature)
+
+    Returns:
+        PAT token string or None if not available
+    """
+    try:
+        # After successful login, pybis sets o.token with the actual PAT
+        if hasattr(openbis, 'token') and openbis.token:
+            logger.debug(f"Extracted PAT token for {username}")
+            return openbis.token
+        else:
+            logger.warning(f"No token available in openbis object for {username}")
+            return None
+    except Exception as e:
+        logger.debug(f"Could not extract PAT: {e}")
+        return None
+
+
+def get_openbis_connection():
+    """
+    Connect to openBIS using PAT-first authentication strategy.
+
+    Attempts:
+    1. Cached PAT from keyring (fast)
+    2. Password login with PAT generation and caching
+
+    Returns:
+        pybis.Openbis object if successful, None otherwise
+    """
+    try:
+        from pybis import Openbis
+    except ImportError as e:
+        logger.error(f"Required package missing: {e}")
+        logger.error("Install with: pip install pybis")
+        return None
+
     config = Config()
-    url = url or config.openbis_url
-    userid = userid or config.openbis_username
-    space = space or config.openbis_space
-    
-    resolved_userid = userid or getuser()
+    url = config.openbis_url
+    username = config.openbis_username
 
-    # If force_password is True, skip PAT and go straight to password prompt
-    if force_password:
-        o = Openbis(url)
-        _cached_password = None
-        password = getpass(f"Enter password for user {resolved_userid} at {url}: ")
-        o.login(resolved_userid, password)
-        logger.info(f"Connected using password for user {resolved_userid}")
-        
-        keyring.set_password("openbis", resolved_userid, o.token)
-        logger.info("PAT stored securely in keyring for next run")
-        return o, resolved_userid, space, False
+    if not username:
+        logger.error("openBIS username not configured in config/settings.json")
+        return None
 
-    # Try to retrieve PAT from keyring (when force_password=False)
-    pat = keyring.get_password("openbis", resolved_userid)
+    logger.info(f"Connecting to openBIS: {url}")
+    logger.info(f"User: {username}")
 
-    if pat:
-        try:
-            o = Openbis(url, token=pat)
-            logger.info(f"Connected using PAT for user {resolved_userid}")
-            return o, resolved_userid, space, True
-        except ValueError:
-            logger.warning("Stored PAT expired or invalid, fallback to password login")
+    try:
+        # Try cached PAT first
+        cached_pat = _get_cached_pat(username)
+        if cached_pat:
+            logger.info("Attempting login with cached PAT...")
+            try:
+                openbis = Openbis(url, token=cached_pat)
+                logger.info("Successfully logged in with cached PAT")
+                return openbis
+            except Exception as e:
+                logger.debug(f"Cached PAT expired or invalid: {e}")
+                logger.info("Falling back to password authentication...")
 
-    # Fallback password login (PAT doesn't exist or is expired)
-    o = Openbis(url)
-    password = getpass(f"Enter password for user {resolved_userid} at {url}: ")
-    o.login(resolved_userid, password)
-    logger.info(f"Connected using password for user {resolved_userid}")
+        # Fall back to password authentication
+        logger.info("Attempting login with password...")
+        openbis = Openbis(url)
+        password = getpass(f"Enter openBIS password for {username}: ")
 
-    # Store the new PAT securely in keyring for next run
-    keyring.set_password("openbis", resolved_userid, o.token)
-    logger.info("PAT stored securely in keyring for next run")
-    return o, resolved_userid, space, False
+        if not password:
+            logger.error("No password provided")
+            return None
 
+        openbis.login(username, password)
+        logger.info("Successfully logged in with password")
 
+        # Try to extract and cache PAT
+        pat = _generate_pat(openbis, username, password)
+        if pat:
+            if _cache_pat(username, pat):
+                logger.info(f"✓ PAT cached successfully for {username} (will be used next time)")
+            else:
+                logger.warning("Failed to cache PAT - password will be used next time")
+        else:
+            logger.warning("No PAT token available to cache - password will be used next time")
+
+        return openbis
+
+    except Exception as e:
+        logger.error(f"Failed to connect to openBIS: {e}")
+        return None
 
 
 class OpenBISConnection:
     """openBIS connection manager."""
-    
+
     def __init__(self):
         """Initialize connection manager."""
         self.openbis = None
-        self.username = None
-        self.space = None
-        self.pat_found = False
-    
-    def connect(self, force_password=False):
-        """
-        Establish connection to openBIS.
-        
-        Parameters:
-        -----------
-        - force_password: If True, skip PAT and force password prompt
-        
-        Returns: Openbis object if successful, None otherwise
-        """
-        result = connect_openbis(force_password=force_password)
-        
-        if result is None:
-            return None
-        
-        self.openbis, self.username, self.space, self.pat_found = result
+
+    def connect(self):
+        """Establish connection to openBIS."""
+        if self.openbis is None:
+            self.openbis = get_openbis_connection()
         return self.openbis
-    
+
     def disconnect(self):
         """Disconnect from openBIS."""
         if self.openbis:
@@ -121,9 +187,8 @@ class OpenBISConnection:
                 logger.info("Disconnected from openBIS")
             except Exception as e:
                 logger.warning(f"Error during logout: {e}")
-            finally:
-                self.openbis = None
-    
-    def is_connected(self):
+            self.openbis = None
+
+    def is_connected(self) -> bool:
         """Check if connected to openBIS."""
         return self.openbis is not None
