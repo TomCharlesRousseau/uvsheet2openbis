@@ -76,7 +76,8 @@ class ObjectManager:
             new_object = self.openbis.new_sample(
                 type="Sample",
                 code=code,
-                project=self.project_path
+                project=self.project_path,
+                props={"$name": code}
             )
             
             # Set properties
@@ -164,7 +165,8 @@ class ObjectManager:
                 child = self.openbis.new_sample(
                     type="Sample",
                     code=child_code,
-                    project=self.project_path
+                    project=self.project_path,
+                    props={"$name": child_code}
                 )
                 child.p.description = f"Child sample {i} of {parent_code}"
                 
