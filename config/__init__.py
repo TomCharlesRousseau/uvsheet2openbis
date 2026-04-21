@@ -73,8 +73,8 @@ class Config:
     
     @property
     def openbis_project_path(self) -> str:
-        """Full openBIS project path (Space/Project)."""
-        return f"{self.openbis_space}/{self.project_name}"
+        """Full openBIS project path (/Space/Project)."""
+        return f"/{self.openbis_space}/{self.project_name}"
     
     @property
     def excel_file_path(self) -> str:

@@ -81,11 +81,9 @@ class ObjectManager:
             
             # Set properties
             new_object.p.responsible_person = person
-            if date:
-                new_object.p.date = str(date)
             
-            # Set description with Spacer and Duration
-            description = self._build_description(spacer, duration)
+            # Set description with Date, Spacer and Duration
+            description = self._build_description(date, spacer, duration)
             new_object.p.description = description
             
             # Save object first
@@ -185,11 +183,12 @@ class ObjectManager:
         logger.info(f"Created {len(created_children)}/{num_sheets} child samples for {parent_code}")
         return created_children
     
-    def _build_description(self, spacer: Any, duration: Any) -> str:
+    def _build_description(self, date: Any = None, spacer: Any = None, duration: Any = None) -> str:
         """
-        Build object description from Spacer and Duration.
+        Build object description from Date, Spacer and Duration.
         
         Args:
+            date: Experiment date
             spacer: Spacer value
             duration: Duration value
             
@@ -197,6 +196,9 @@ class ObjectManager:
             Formatted description string
         """
         parts = []
+        
+        if date and str(date).lower() not in ['nan', 'none', '']:
+            parts.append(f"Date: {date}")
         
         if spacer and str(spacer).lower() not in ['nan', 'none', '']:
             parts.append(f"Spacer: {spacer}")
