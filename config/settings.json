@@ -1,11 +1,12 @@
 {
-    "openbis": {
-        "api_url": "https://your-openbis-server/api/v3",
-        "username": "your_username",
-        "space": "YOUR_SPACE",
-        "project_name": "YOUR_PROJECT"
-    },
+  "openbis": {
+    "api_url": "https://main.datastore.bam.de/",
+    "username": "troussea",
+    "space": "5.4_TROUSSEA",
+    "project_name": "PROJECT_UVSHEET"
+  },
     "excel": {
         "file_path": "UV-Sheets_protocol.xlsx"
     }
 }
+

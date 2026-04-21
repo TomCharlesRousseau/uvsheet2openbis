@@ -1,9 +1,9 @@
 """
 openBIS connection handler.
-Manages authentication using keyring for secure PAT storage.
+Manages authentication using keyring for secure PAT/token storage.
 """
 
-from typing import Optional
+from typing import Optional, Tuple
 from getpass import getpass, getuser
 from utils.logging_config import get_logger
 from config import Config
@@ -14,12 +14,14 @@ logger = get_logger()
 _cached_password = None
 
 
-def get_openbis_connection():
+def get_openbis_connection() -> Optional[object]:
     """
-    Connect to openBIS using secure PAT from keyring.
+    Connect to openBIS using stored PAT from keyring.
+    Fallback to interactive password login if no valid PAT exists.
     
-    - First run: prompts for password, stores PAT securely
-    - Subsequent runs: uses stored PAT automatically
+    - First run: prompts for password, stores token securely
+    - Subsequent runs: uses stored token automatically
+    - If token expires: prompts for password again
     
     Returns:
         pybis.Openbis object if successful, None otherwise
@@ -31,6 +33,8 @@ def get_openbis_connection():
         logger.error(f"Required package missing: {e}")
         logger.error("Install with: pip install pybis keyring")
         return None
+    
+    global _cached_password
     
     config = Config()
     url = config.openbis_url
@@ -44,37 +48,42 @@ def get_openbis_connection():
     logger.info(f"User: {username}")
     
     try:
-        # Try to retrieve PAT from keyring
+        # Try to retrieve PAT/token from keyring
         pat = keyring.get_password("openbis", username)
         
         if pat:
-            logger.info("Using stored PAT from keyring")
-            openbis = Openbis(url, username=username, password=pat, verify_ssl=False)
-            openbis.login()
-            logger.info("Successfully logged in to openBIS")
-            return openbis
-        else:
-            # Prompt for password
-            logger.info("No PAT found in keyring. Prompting for password...")
-            password = getpass(f"Enter openBIS password for {username}: ")
-            
-            if not password:
-                logger.error("No password provided")
-                return None
-            
-            # Store in keyring
             try:
-                keyring.set_password("openbis", username, password)
-                logger.info("Password stored securely in keyring")
-            except Exception as e:
-                logger.warning(f"Could not store password in keyring: {e}")
-            
-            # Connect
-            openbis = Openbis(url, username=username, password=password, verify_ssl=False)
-            openbis.login()
-            logger.info("Successfully logged in to openBIS")
-            return openbis
-            
+                logger.info("Attempting to use stored PAT from keyring")
+                openbis = Openbis(url, token=pat)
+                logger.info("Successfully connected using stored PAT")
+                return openbis
+            except ValueError as e:
+                logger.warning(f"Stored PAT expired or invalid: {e}")
+                logger.info("Falling back to password login...")
+        
+        # Fallback: password login
+        openbis = Openbis(url)
+        
+        if not _cached_password:
+            _cached_password = getpass(f"Enter openBIS password for {username} at {url}: ")
+        
+        if not _cached_password:
+            logger.error("No password provided")
+            return None
+        
+        logger.info("Attempting to login with password...")
+        openbis.login(username, _cached_password)
+        logger.info("Successfully logged in with password")
+        
+        # Store the new token securely in keyring for next run
+        try:
+            keyring.set_password("openbis", username, openbis.token)
+            logger.info("Token stored securely in keyring for future use")
+        except Exception as e:
+            logger.warning(f"Could not store token in keyring: {e}")
+        
+        return openbis
+        
     except Exception as e:
         logger.error(f"Failed to connect to openBIS: {e}")
         return None

@@ -73,11 +73,10 @@ class ExcelParser:
         Returns:
             List of pending row dictionaries
         """
-        # Handle various ways "Uploaded" might be marked
-        pending = self.df[
-            (self.df["Uploaded"].isna()) | 
-            (self.df["Uploaded"].str.strip().str.lower() != "yes")
-        ].copy()
+        # Rows are pending if Uploaded column is not "Yes" (case-insensitive)
+        # This includes empty/NaN values
+        uploaded_col = self.df["Uploaded"].fillna("").astype(str).str.strip().str.lower()
+        pending = self.df[uploaded_col != "yes"].copy()
         
         logger.info(f"Found {len(pending)} pending rows (Uploaded != 'Yes')")
         return pending.to_dict('records')
