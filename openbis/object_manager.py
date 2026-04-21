@@ -36,11 +36,9 @@ class ObjectManager:
         """
         try:
             # Search for object by code in the project
-            criteria = self.openbis.new_search_criteria()
-            criteria.add_property("code").contains(code)
-            results = self.openbis.find_samples(criteria)
+            results = self.openbis.get_samples(code=code, project=self.project_path)
             
-            if results:
+            if len(results) > 0:
                 logger.debug(f"Object '{code}' already exists")
                 return True
             return False
@@ -74,8 +72,12 @@ class ObjectManager:
             permID of created object or None if failed
         """
         try:
-            # Create object
-            new_object = self.openbis.new_sample(code, self.project_path, "Sample")
+            # Create object with type "Sample" and provided code
+            new_object = self.openbis.new_sample(
+                type="Sample",
+                code=code,
+                project=self.project_path
+            )
             
             # Set properties
             new_object.p.responsible_person = person
@@ -161,7 +163,11 @@ class ObjectManager:
             
             try:
                 # Create child object
-                child = self.openbis.new_sample(child_code, self.project_path, "Sample")
+                child = self.openbis.new_sample(
+                    type="Sample",
+                    code=child_code,
+                    project=self.project_path
+                )
                 child.p.description = f"Child sample {i} of {parent_code}"
                 
                 # Set parent relationship
