@@ -1,0 +1,11 @@
+{
+    "openbis": {
+        "api_url": "https://your-openbis-server/api/v3",
+        "username": "your_username",
+        "space": "YOUR_SPACE",
+        "project_name": "YOUR_PROJECT"
+    },
+    "excel": {
+        "file_path": "UV-Sheets_protocol.xlsx"
+    }
+}
