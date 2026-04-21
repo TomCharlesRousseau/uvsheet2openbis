@@ -50,7 +50,7 @@ def demo_dry_run():
                 person = row.get('Person', 'N/A')
                 num_sheets = row.get('Number of Sheets', 'N/A')
                 uploaded = row.get('Uploaded', '')
-                status = "✓ Already uploaded" if str(uploaded).lower() == 'yes' else "○ Pending"
+                status = "[DONE] Already uploaded" if str(uploaded).lower() == 'yes' else "[TODO] Pending"
                 
                 print(f"\n  Row {i}: {code} ({status})")
                 print(f"    - Person: {person}")
@@ -72,6 +72,9 @@ def demo_dry_run():
                 spacer = row.get('Spacer', 'N/A')
                 duration = row.get('Duration [s]', 'N/A')
                 
+                # Format num_sheets for display
+                sheets_str = f"{int(num_sheets)} sheets" if isinstance(num_sheets, (int, float)) and not str(num_sheets).lower() == 'nan' else "n/a"
+                
                 print(f"\n  {i}. Code: {code}")
                 print(f"     Person: {person}")
                 print(f"     Resin Perm-ID: {resin_perm}")
@@ -79,7 +82,7 @@ def demo_dry_run():
                 print(f"     Number of Sheets: {num_sheets}")
                 print(f"     Spacer: {spacer}")
                 print(f"     Duration [s]: {duration}")
-                print(f"     Will create: 1 main object + {num_sheets} child samples")
+                print(f"     Will create: 1 main object + {sheets_str}")
             
             if len(pending) > 10:
                 print(f"\n  ... and {len(pending) - 10} more rows")
@@ -93,7 +96,7 @@ def demo_dry_run():
         
         print_header("DRY-RUN COMPLETE")
         if success:
-            print("✓ Dry-run completed successfully!")
+            print("[OK] Dry-run completed successfully!")
             print(f"\nSummary:")
             print(f"  - Rows processed: {parser.rows_processed}")
             print(f"  - Would be successful: {parser.rows_successful}")
@@ -101,13 +104,13 @@ def demo_dry_run():
             print(f"  - Skipped: {parser.rows_skipped}")
             print("\nWhen ready, run: python main.py")
         else:
-            print("✗ Dry-run completed with errors")
+            print("[ERROR] Dry-run completed with errors")
         
         return success
     
     except Exception as e:
         logger.error(f"Error during demo: {e}", exc_info=True)
-        print(f"\n✗ Error: {e}")
+        print(f"\n[ERROR] {e}")
         return False
 
 
