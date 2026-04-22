@@ -50,7 +50,31 @@ A Python-based parser that reads experimental data from an Excel protocol file a
 
 ### Usage
 
-Run the parser:
+#### Option 1: Web Interface (Recommended for most users)
+
+Run the Streamlit UI for an interactive, user-friendly experience:
+
+**Windows:**
+```bash
+# Simply double-click:
+run_streamlit.bat
+
+# Or run in command prompt:
+streamlit run streamlit_app.py
+```
+
+**Linux/macOS:**
+```bash
+streamlit run streamlit_app.py
+```
+
+The app will open automatically at `http://localhost:8501`
+
+📖 [Full Streamlit UI Documentation](STREAMLIT_UI.md) | [Quick Start Guide](STREAMLIT_QUICKSTART.md)
+
+#### Option 2: Command Line
+
+Run the parser directly from the terminal:
 ```bash
 python main.py
 ```
