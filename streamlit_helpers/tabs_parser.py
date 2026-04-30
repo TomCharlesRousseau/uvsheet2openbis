@@ -14,6 +14,106 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from openbis.connection import OpenBISConnection
 from config import Config
+import json
+
+
+def tab_settings():
+    """
+    Settings tab: Configure Space, Project, and Collection settings
+    
+    Features:
+    - Display current values from config/settings.json
+    - Allow manual editing of Space, Project, and Collection names
+    - Save changes back to settings.json
+    """
+    st.header("⚙️ OpenBIS Settings")
+    
+    st.markdown("""
+    Configure your openBIS workspace settings. These values are loaded from `config/settings.json`
+    and can be modified here. Changes will be saved to the configuration file.
+    """)
+    
+    st.divider()
+    
+    try:
+        # Load current settings - find the config file
+        settings_file = Path(__file__).parent.parent / "config" / "settings.json"
+        
+        with open(settings_file, "r") as f:
+            settings = json.load(f)
+        
+        openbis_settings = settings.get("openbis", {})
+        
+        st.subheader("✏️ Edit Settings")
+        
+        # Editable fields
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            space = st.text_input(
+                "Space",
+                value=openbis_settings.get("space", ""),
+                help="OpenBIS Space name (e.g., 5.4_TRANSNANOAF)"
+            )
+        
+        with col2:
+            project = st.text_input(
+                "Project",
+                value=openbis_settings.get("project_name", ""),
+                help="OpenBIS Project name (e.g., FORMGEBUNG)"
+            )
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            collection_exp_step = st.text_input(
+                "Collection (Experimental Steps)",
+                value=openbis_settings.get("collection_exp_step", ""),
+                help="Collection name for experimental step objects (e.g., UV-SHEETS)"
+            )
+        
+        with col2:
+            collection_samples = st.text_input(
+                "Collection (Samples)",
+                value=openbis_settings.get("collection_samples", ""),
+                help="Collection name for sample objects (e.g., UV-SHEETS)"
+            )
+        
+        st.divider()
+        
+        # Save button
+        if st.button("💾 Save Settings", use_container_width=True):
+            try:
+                # Update settings
+                settings["openbis"]["space"] = space.strip()
+                settings["openbis"]["project_name"] = project.strip()
+                settings["openbis"]["collection_exp_step"] = collection_exp_step.strip()
+                settings["openbis"]["collection_samples"] = collection_samples.strip()
+                
+                # Write back to file
+                with open(settings_file, "w") as f:
+                    json.dump(settings, f, indent=2)
+                
+                st.success("✅ Settings saved successfully!")
+                st.balloons()
+                
+                st.info("""
+                **Note:** New settings will take effect the next time you connect to openBIS.
+                If you're already connected, you may need to disconnect and reconnect.
+                """)
+            
+            except Exception as e:
+                st.error(f"❌ Failed to save settings: {e}")
+        
+        st.divider()
+        st.subheader("📋 All Settings")
+        
+        with st.expander("View raw settings.json"):
+            st.json(settings)
+    
+    except Exception as e:
+        st.error(f"❌ Error loading settings: {e}")
+        st.info("Make sure `config/settings.json` exists and is properly formatted.")
 
 
 def tab_connection_parser():

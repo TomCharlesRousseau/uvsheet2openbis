@@ -50,6 +50,7 @@ st.write("Parse UV sheet experimental data from Excel and register objects in op
 
 # Import tab modules
 from streamlit_helpers.tabs_parser import (
+    tab_settings,
     tab_connection_parser,
     tab_upload_excel,
     tab_configure_parser,
@@ -59,6 +60,7 @@ from streamlit_helpers.tabs_parser import (
 
 # Create tabs
 tabs = st.tabs([
+    "⚙️ Settings",
     "🔐 Connection",
     "📄 Upload Excel",
     "⚙️ Configure",
@@ -68,18 +70,21 @@ tabs = st.tabs([
 
 # Render tabs
 with tabs[0]:
-    tab_connection_parser()
+    tab_settings()
 
 with tabs[1]:
-    tab_upload_excel()
+    tab_connection_parser()
 
 with tabs[2]:
-    tab_configure_parser()
+    tab_upload_excel()
 
 with tabs[3]:
-    tab_run_parser()
+    tab_configure_parser()
 
 with tabs[4]:
+    tab_run_parser()
+
+with tabs[5]:
     tab_view_results()
 
 # Sidebar info
