@@ -2,6 +2,24 @@
 
 A Python-based parser that reads experimental data from an Excel protocol file and registers UV sheet experimental steps and sample objects in openBIS.
 
+---
+
+## 🚀 **Quick Launch (No Setup Needed!)**
+
+**Click the button below to launch the setup notebook in your browser:**
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TomCharlesRousseau/uvsheet2openbis/main?filepath=SETUP_NOTEBOOK.ipynb)
+
+This opens an interactive Jupyter notebook where you can:
+1. ✅ Automatically install all dependencies
+2. ✅ Clone the repository  
+3. ✅ Verify everything works
+4. ✅ Get instructions to launch the app
+
+**Perfect for users with no coding background!**
+
+---
+
 ## Quick Start
 
 ### Prerequisites
