@@ -4,21 +4,16 @@
 
 ### ✅ Safe Workflow
 
-1. **Run setup in Binder** (no credentials needed)
-   - Click the Binder badge in README
-   - Run the notebook cells to install dependencies
-   - No credentials are entered during this step
+1. **Clone repository to your local machine**
+   - `git clone https://github.com/TomCharlesRousseau/uvsheet2openbis.git`
+   - Or download ZIP from GitHub
 
-2. **Download repository locally**
-   - After Binder validation, download/clone to your machine
-   - Credentials are ONLY stored on your local machine
-
-3. **Edit `config/settings.json` LOCALLY** (on your computer)
+2. **Edit `config/settings.json` LOCALLY** (on your computer)
    - Copy `config/settings.json.example` to `config/settings.json`
    - Edit your local copy with your openBIS credentials
    - This file is in `.gitignore` and will NEVER be committed to GitHub
 
-4. **Use secure credential storage**
+3. **Use secure credential storage**
    - On first launch, you'll be prompted for password
    - Credentials are stored in your system's secure keyring:
      - **Windows:** Credential Manager
@@ -27,11 +22,6 @@
    - Credentials are NEVER stored in plain text
 
 ### ❌ NEVER Do These Things
-
-❌ **Don't paste credentials into Binder**
-- Binder is a public service
-- Credentials would be visible in cell outputs
-- Outputs might be logged
 
 ❌ **Don't commit `config/settings.json` to GitHub**
 - You would expose your credentials publicly
@@ -43,9 +33,9 @@
 API_KEY = "sk_live_abc123..."
 ```
 
-❌ **Don't share notebooks with credentials**
-- Credentials persist in Jupyter cell outputs
-- `.ipynb` files are JSON and readable
+❌ **Don't share code that contains credentials**
+- If you accidentally hardcode a credential, remove it immediately
+- Check git history to ensure it's not in past commits
 
 ---
 

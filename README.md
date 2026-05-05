@@ -4,19 +4,19 @@ A Python-based parser that reads experimental data from an Excel protocol file a
 
 ---
 
-## 🚀 **Quick Launch (No Setup Needed!)**
+## Quick Start
 
-**Click the button below to launch the setup notebook in your browser:**
+**Windows (Easiest):**
+```bash
+# Download SETUP_AND_RUN.bat and double-click it
+# Everything installs and launches automatically
+```
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/TomCharlesRousseau/uvsheet2openbis/main?filepath=SETUP_NOTEBOOK.ipynb)
-
-This opens an interactive Jupyter notebook where you can:
-1. ✅ Automatically install all dependencies
-2. ✅ Clone the repository  
-3. ✅ Verify everything works
-4. ✅ Get instructions to launch the app
-
-**Perfect for users with no coding background!**
+**macOS/Linux:**
+```bash
+chmod +x setup_and_run.sh
+./setup_and_run.sh
+```
 
 ---
 
@@ -25,9 +25,7 @@ This opens an interactive Jupyter notebook where you can:
 **Read this before using:** [🔐 SECURITY.md](SECURITY.md)
 
 ### Key Points:
-- ✅ **Binder is SAFE for installation** (no credentials needed)
 - ✅ **Credentials stored SECURELY locally** (Windows Credential Manager, macOS Keychain, Linux pass)
-- ❌ **NEVER paste credentials into Binder**
 - ❌ **NEVER commit `config/settings.json` to GitHub**
 
 Your credentials are:
