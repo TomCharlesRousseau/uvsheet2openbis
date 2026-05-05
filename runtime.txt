@@ -1,6 +1,1 @@
-# This file tells Binder which Python version to use
-# Uncomment one option below:
-
 python-3.11
-# python-3.10
-# python-3.9
