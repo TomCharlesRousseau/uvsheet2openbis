@@ -20,6 +20,26 @@ This opens an interactive Jupyter notebook where you can:
 
 ---
 
+## ⚠️ Important: Security & Credentials
+
+**Read this before using:** [🔐 SECURITY.md](SECURITY.md)
+
+### Key Points:
+- ✅ **Binder is SAFE for installation** (no credentials needed)
+- ✅ **Credentials stored SECURELY locally** (Windows Credential Manager, macOS Keychain, Linux pass)
+- ❌ **NEVER paste credentials into Binder**
+- ❌ **NEVER commit `config/settings.json` to GitHub**
+
+Your credentials are:
+- Stored in your system's secure keyring (encrypted)
+- Never stored in plain text
+- Never visible in code
+- Never committed to GitHub
+
+See [SECURITY.md](SECURITY.md) for full guidelines.
+
+---
+
 ## Quick Start
 
 ### Prerequisites

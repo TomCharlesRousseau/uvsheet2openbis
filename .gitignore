@@ -136,3 +136,13 @@ Thumbs.db
 .pytest_cache
 parser.log
 ~$*.xlsx
+
+# Credentials & Secrets (NEVER COMMIT THESE)
+config/settings.json
+credentials/
+*.key
+*.pem
+*.pfx
+.auth
+secrets.yaml
+secrets.json
