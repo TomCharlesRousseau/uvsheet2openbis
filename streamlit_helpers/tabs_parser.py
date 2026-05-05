@@ -14,6 +14,185 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from openbis.connection import OpenBISConnection
 from config import Config
+import json
+
+
+def tab_settings():
+    """
+    Settings tab: Configure openBIS connection settings (Space, Project, Collection)
+    Users can edit settings and save them back to config/settings.json
+    """
+    st.header("⚙️ Settings")
+    
+    st.markdown("""
+    Configure your openBIS connection settings. Changes are saved to `config/settings.json`.
+    """)
+    
+    # Check if settings file exists
+    settings_path = Path(__file__).parent.parent / "config" / "settings.json"
+    
+    if not settings_path.exists():
+        st.error(f"❌ Settings file not found: {settings_path}")
+        st.info("Please create `config/settings.json` with your openBIS configuration.")
+        
+        # Show example
+        with st.expander("Show example settings.json"):
+            example = {
+                "openbis": {
+                    "api_url": "https://your-openbis-server/api/v3",
+                    "username": "your_username",
+                    "space": "YOUR_SPACE",
+                    "project_name": "YOUR_PROJECT",
+                    "collection_exp_step": "EXPERIMENTAL_STEPS",
+                    "collection_samples": "SAMPLE_SHEETS"
+                },
+                "excel": {
+                    "file_path": "UV-Sheets_protocol.xlsx"
+                }
+            }
+            st.json(example)
+        return
+    
+    try:
+        # Load settings
+        with open(settings_path, 'r') as f:
+            settings = json.load(f)
+        
+        st.success("✅ Settings file found and loaded")
+        
+        # Toggle edit mode
+        col1, col2 = st.columns([3, 1])
+        with col2:
+            edit_mode = st.checkbox("✏️ Edit Mode", value=False)
+        
+        st.divider()
+        
+        # Display/Edit current settings
+        st.subheader("Configuration")
+        
+        if not edit_mode:
+            # Display mode (read-only)
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.text_input(
+                    "OpenBIS API URL",
+                    value=settings.get("openbis", {}).get("api_url", ""),
+                    disabled=True,
+                )
+                
+                st.text_input(
+                    "Space",
+                    value=settings.get("openbis", {}).get("space", ""),
+                    disabled=True,
+                )
+                
+                st.text_input(
+                    "Collection (Experimental Steps)",
+                    value=settings.get("openbis", {}).get("collection_exp_step", ""),
+                    disabled=True,
+                    help="Collection path for storing experimental step objects"
+                )
+            
+            with col2:
+                st.text_input(
+                    "Username",
+                    value=settings.get("openbis", {}).get("username", ""),
+                    disabled=True,
+                )
+                
+                st.text_input(
+                    "Project",
+                    value=settings.get("openbis", {}).get("project_name", ""),
+                    disabled=True,
+                )
+                
+                st.text_input(
+                    "Collection (Sample Sheets)",
+                    value=settings.get("openbis", {}).get("collection_samples", ""),
+                    disabled=True,
+                    help="Collection path for storing child sample objects"
+                )
+        
+        else:
+            # Edit mode
+            st.warning("✏️ **Edit Mode Enabled** - Changes will be saved to settings.json")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                api_url = st.text_input(
+                    "OpenBIS API URL",
+                    value=settings.get("openbis", {}).get("api_url", ""),
+                    key="edit_api_url"
+                )
+                
+                space = st.text_input(
+                    "Space",
+                    value=settings.get("openbis", {}).get("space", ""),
+                    key="edit_space"
+                )
+                
+                collection_exp_step = st.text_input(
+                    "Collection (Experimental Steps)",
+                    value=settings.get("openbis", {}).get("collection_exp_step", ""),
+                    key="edit_collection_exp_step",
+                    help="Collection name for experimental step objects (e.g., EXPERIMENTAL_STEPS)"
+                )
+            
+            with col2:
+                username = st.text_input(
+                    "Username",
+                    value=settings.get("openbis", {}).get("username", ""),
+                    key="edit_username"
+                )
+                
+                project = st.text_input(
+                    "Project",
+                    value=settings.get("openbis", {}).get("project_name", ""),
+                    key="edit_project"
+                )
+                
+                collection_samples = st.text_input(
+                    "Collection (Sample Sheets)",
+                    value=settings.get("openbis", {}).get("collection_samples", ""),
+                    key="edit_collection_samples",
+                    help="Collection name for child sample objects (e.g., SAMPLE_SHEETS)"
+                )
+            
+            st.divider()
+            
+            # Save button
+            if st.button("💾 Save Settings", use_container_width=True, type="primary"):
+                try:
+                    # Update settings dictionary
+                    settings["openbis"]["api_url"] = api_url
+                    settings["openbis"]["username"] = username
+                    settings["openbis"]["space"] = space
+                    settings["openbis"]["project_name"] = project
+                    settings["openbis"]["collection_exp_step"] = collection_exp_step
+                    settings["openbis"]["collection_samples"] = collection_samples
+                    
+                    # Write back to file
+                    with open(settings_path, 'w') as f:
+                        json.dump(settings, f, indent=2)
+                    
+                    st.success("✅ Settings saved successfully!")
+                    st.info("💡 Reload the Streamlit app to apply changes.")
+                    
+                except Exception as e:
+                    st.error(f"❌ Failed to save settings: {e}")
+        
+        st.divider()
+        st.subheader("📝 Full Configuration")
+        
+        st.json(settings)
+        
+    except json.JSONDecodeError as e:
+        st.error(f"❌ Invalid JSON in settings.json: {e}")
+        st.info("Please fix the JSON syntax in your settings file.")
+    except Exception as e:
+        st.error(f"❌ Error reading settings: {e}")
 
 
 def tab_connection_parser():
@@ -408,6 +587,7 @@ def _run_parser_execution():
                                 parent_code=code,
                                 parent_perm_id=parent_perm_id,
                                 num_sheets=num_sheets,
+                                person=person,
                             )
                             
                             results["successful"] += 1

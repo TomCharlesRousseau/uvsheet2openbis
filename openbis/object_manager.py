@@ -5,6 +5,7 @@ Handles creation of UV sheet experimental steps and child samples.
 
 from typing import Any, Optional, List
 from utils.logging_config import get_logger
+from utils.person_lookup import get_person_by_bam_username
 from config import Config
 
 logger = get_logger()
@@ -177,7 +178,7 @@ class ObjectManager:
             return None
 
     def create_child_samples(
-        self, parent_code: str, parent_perm_id: str, num_sheets: int
+        self, parent_code: str, parent_perm_id: str, num_sheets: int, person: str = None
     ) -> List[str]:
         """
         Create N child sample objects with parent relationship.
@@ -186,11 +187,25 @@ class ObjectManager:
             parent_code: Parent object code
             parent_perm_id: Parent object permID
             num_sheets: Number of child samples to create
+            person: Username of responsible person (will be resolved to permID)
 
         Returns:
             List of created child permIDs
         """
         created_children = []
+
+        # Get person permID if provided
+        person_permid = None
+        if person:
+            try:
+                person_info = get_person_by_bam_username(self.openbis, person, return_field="permid")
+                if person_info:
+                    person_permid = person_info
+                    logger.debug(f"Resolved person '{person}' to permID: {person_permid}")
+                else:
+                    logger.warning(f"Could not resolve person '{person}' to permID")
+            except Exception as e:
+                logger.warning(f"Error resolving person '{person}' to permID: {e}")
 
         # Verify parent exists
         try:
@@ -226,6 +241,14 @@ class ObjectManager:
                     child.p.description = f"Child sample {i} of {parent_code}"
                 except Exception as e:
                     logger.debug(f"Could not set description on child: {e}")
+
+                # Set responsible person if provided
+                if person_permid:
+                    try:
+                        child.p["responsible_person"] = person_permid
+                        logger.debug(f"Set responsible_person for {child_code}: {person_permid}")
+                    except Exception as e:
+                        logger.debug(f"Could not set responsible_person on child: {e}")
 
                 # Link parent using permID (not parent object)
                 child.parents = [parent_perm_id]

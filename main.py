@@ -199,7 +199,7 @@ class UVSheetParser:
             # Create child samples
             logger.info(f"Creating {num_sheets} child samples for {code}")
             children = self.object_manager.create_child_samples(
-                parent_code=code, parent_perm_id=parent_perm_id, num_sheets=num_sheets
+                parent_code=code, parent_perm_id=parent_perm_id, num_sheets=num_sheets, person=person
             )
 
             if len(children) < num_sheets:
