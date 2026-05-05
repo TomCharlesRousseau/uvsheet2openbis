@@ -1,0 +1,16 @@
+{
+  "openbis": {
+    "api_url": "https://your-openbis-server/",
+    "username": "your_username",
+    "space": "YOUR_SPACE",
+    "project_name": "YOUR_PROJECT",
+    "collection_exp_step": "COLLECTION_NAME_FOR_STEPS",
+    "collection_samples": "COLLECTION_NAME_FOR_SAMPLES"
+  },
+  "properties": {
+    "bam_oe": "YOUR_PROPERTY_VALUE"
+  },
+  "excel": {
+    "file_path": "UV-Sheets_protocol.xlsx"
+  }
+}
